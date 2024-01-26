@@ -7,6 +7,8 @@
 #include <ew/camera.h>
 #include <ew/cameraController.h>
 #include <ew/transform.h>
+#include <ew/texture.h>
+
 
 
 #include <GLFW/glfw3.h>
@@ -27,6 +29,14 @@ float deltaTime;
 ew::Camera camera;
 ew::CameraController cameraController;
 
+struct Material {
+	float Ka = 1.0; 
+	float Kd = 0.5;
+	float Ks = 0.5;
+	float Shininess = 128;
+}material;
+
+
 int main() {
 	GLFWwindow* window = initWindow("Assignment 0", screenWidth, screenHeight);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
@@ -34,6 +44,8 @@ int main() {
 
 	ew::Shader shader = ew::Shader("assets/lit.vert", "assets/lit.frag");
 	ew::Model monkeyModel = ew::Model("assets/suzanne.obj");
+
+	GLuint brickTexture = ew::loadTexture("assets/brick_color.jpg");
 
 	
 	camera.position = glm::vec3(0.0f, 0.0f, 5.0f);
@@ -44,6 +56,7 @@ int main() {
 
 	ew::Transform monkeyTransform;
 	
+
 
 
 
@@ -66,18 +79,29 @@ int main() {
 
 		monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
 
+		shader.setFloat("_Material.Ka", material.Ka);
+		shader.setFloat("_Material.Kd", material.Kd);
+		shader.setFloat("_Material.Ks", material.Ks);
+		shader.setFloat("_Material.Shininess", material.Shininess);
+
+
 		shader.use();
 		shader.setMat4("_Model", monkeyTransform.modelMatrix());
 		shader.setMat4("_ViewProjection", camera.projectionMatrix() * camera.viewMatrix());
+		shader.setVec3("_EyePos", camera.position);
 		monkeyModel.draw();
-
-		//Rotate model around Y axis
 		
-
+		//Rotate model around Y axis
 
 		cameraController.move(window, &camera, deltaTime);
 
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, brickTexture);
+		//Make "_MainTex" sampler2D sample from the 2D texture bound to unit 0
+		shader.use();
+		shader.setInt("_MainTex", 0);
 
+		
 		drawUI();
 
 		glfwSwapBuffers(window);
@@ -103,6 +127,14 @@ void drawUI() {
 	if (ImGui::Button("Reset Camera")) {
 		resetCamera(&camera, &cameraController);
 	}
+
+	if (ImGui::CollapsingHeader("Material")) {
+		ImGui::SliderFloat("AmbientK", &material.Ka, 0.0f, 1.0f);
+		ImGui::SliderFloat("DiffuseD", &material.Kd, 0.0f, 1.0f);
+		ImGui::SliderFloat("SpecularK", &material.Ks, 0.0f, 1.0f);
+		ImGui::SliderFloat("Shininess", &material.Shininess, 2.0f, 1024.0f);
+	}
+
 	ImGui::End();
 
 	ImGui::Render();

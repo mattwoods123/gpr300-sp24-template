@@ -19,6 +19,7 @@ static int getTextureFormat(int numComponents) {
 	}
 }
 namespace ew {
+
 	unsigned int loadTexture(const char* filePath) {
 		return loadTexture(filePath, GL_REPEAT, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR, true);
 	}
