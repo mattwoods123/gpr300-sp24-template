@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <math.h>
-#include <iostream>
 
 #include <ew/external/glad.h>
 #include <ew/shader.h>
@@ -30,16 +29,6 @@ float deltaTime;
 ew::Camera camera;
 ew::CameraController cameraController;
 
-float recVerts[] = {
-	1.0f, -1.0f, 1.0f, 0.0f,
-	-1.0f, -1.0, 0.0f, 0.0f,
-	-1.0f, 1.0f, 0.0f, 1.0f,
-
-	1.0f, 1.0f, 1.0f, 1.0f,
-	1.0f, -1.0f, 1.0f, 0.0f,
-	-1.0f, 1.0f, 0.0f,  1.0f
-};
-
 struct Material {
 	float Ka = 1.0; 
 	float Kd = 0.5;
@@ -48,15 +37,15 @@ struct Material {
 }material;
 
 
+
+
+
 int main() {
-	GLFWwindow* window = initWindow("Assignment 1", screenWidth, screenHeight);
+	GLFWwindow* window = initWindow("Assignment 0", screenWidth, screenHeight);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
 
-	glfwPollEvents();
-
 	ew::Shader shader = ew::Shader("assets/lit.vert", "assets/lit.frag");
-	ew::Shader framebuffer = ew::Shader("assets/framebuffer.vert", "assets/framebuffer.frag");
 	ew::Model monkeyModel = ew::Model("assets/suzanne.obj");
 
 	GLuint brickTexture = ew::loadTexture("assets/brick_color.jpg");
@@ -71,16 +60,39 @@ int main() {
 	ew::Transform monkeyTransform;
 	
 
-	unsigned int rectVA, rectVB;
-	glGenVertexArrays(1, &rectVA);
-	glGenBuffers(1, &rectVB);
-	glBindVertexArray(rectVA);
-	glBindBuffer(GL_ARRAY_BUFFER, rectVB);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(recVerts), &recVerts, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	unsigned int depthMapFBO;
+	glGenFramebuffers(1, &depthMapFBO);
+
+	const unsigned int Shadow_W = 1024, Shadow_H = 1024;
+
+	unsigned int depthMap;
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, Shadow_W, Shadow_H, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO); 
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap,0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glViewport(0, 0, Shadow_W, Shadow_H);
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	//ConfigureShaderAndMatrices();
+	//RenderScene();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, screenWidth, screenHeight);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//ConfigureShaderAndMatrices();
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	//RenderScene();
+
+
 
 
 
@@ -90,52 +102,16 @@ int main() {
 	glEnable(GL_DEPTH_TEST); //Depth testing
 
 
-
-	unsigned int FBO;
-	glGenFramebuffers(1, &FBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-
-	unsigned int frameBufferTexture;
-	glGenTextures(0, &frameBufferTexture);
-	glBindTexture(GL_TEXTURE_2D, frameBufferTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameBufferTexture, 0);
-
-	unsigned int RBO;
-	glGenRenderbuffers(1, &RBO);
-	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
-
-	auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	
-	if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
-		std::cout << "Error : " << fboStatus << std::endl;
-	}
-
-
-
-
 	while (!glfwWindowShouldClose(window)) {
-		
+		glfwPollEvents();
 
 		float time = (float)glfwGetTime();
 		deltaTime = time - prevFrameTime;
 		prevFrameTime = time;
 
-		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-
-
 		//RENDER
 		glClearColor(0.6f,0.8f,0.92f,1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-		//glEnable(GL_DEPTH_TEST);
 
 		monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
 
@@ -153,30 +129,16 @@ int main() {
 		
 		//Rotate model around Y axis
 
-
 		cameraController.move(window, &camera, deltaTime);
-
-		//framebuffer.setVec2()
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, brickTexture);
-		
+		//Make "_MainTex" sampler2D sample from the 2D texture bound to unit 0
 		shader.use();
 		shader.setInt("_MainTex", 0);
 
-		framebuffer.use();
-		framebuffer.setInt("_MainTex", 0);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		framebuffer.use();
-		glBindVertexArray(rectVA);
-		glDisable(GL_DEPTH_TEST);
-		glBindTexture(GL_TEXTURE_2D, frameBufferTexture);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-
-
+		
 		drawUI();
-
 
 		glfwSwapBuffers(window);
 	}
