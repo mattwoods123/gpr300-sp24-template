@@ -50,6 +50,7 @@ int main() {
 
 	ew::Shader shader = ew::Shader("assets/lit.vert", "assets/lit.frag");
 	ew::Model monkeyModel = ew::Model("assets/suzanne.obj");
+	ew::Shader shadow = ew::Shader("assets/shadow.vert", "assets/shadow.frag");
 
 	GLuint brickTexture = ew::loadTexture("assets/brick_color.jpg");
 
@@ -70,8 +71,11 @@ int main() {
 
 	planeTransform.position = glm::vec3(0, -2, 0);
 	
+
 	const unsigned int Shadow_W = 1024, Shadow_H = 1024;
 	unsigned int depthMapFBO;
+	glCreateFramebuffers(1, &depthMapFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 	glGenFramebuffers(1, &depthMapFBO);
 
 	
@@ -82,14 +86,18 @@ int main() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, Shadow_W, Shadow_H, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	float borderColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO); 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap,0);
+
+
+	//glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO); 
+	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap,0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	//glViewport(0, 0, Shadow_W, Shadow_H);
 	//glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
@@ -104,11 +112,11 @@ int main() {
 
 	
 
-	ew::Shader shadow = ew::Shader("assets/shadow.vert", "assets/shadow.frag");
+	
 
 	ew::Shader quad = ew::Shader("assets/quad.vert", "assets/quad.frag");
 
-	shadow.use();
+	
 
 
 
@@ -132,15 +140,15 @@ int main() {
 
 		//monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
 		
+
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glViewport(0, 0, screenWidth, screenHeight);
 		
 		
-		glClearColor(0.6f,0.8f,0.92f,1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-
-
 		
+		glClearColor(0.6f, 0.8f, 0.92f, 1.0f);
 
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
 
@@ -169,11 +177,11 @@ int main() {
 		glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
 
-		glViewport(0, 0, Shadow_W, Shadow_H);
-		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-		glClear(GL_DEPTH_BUFFER_BIT);
+		//glViewport(0, 0, Shadow_W, Shadow_H);
+		//glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		//glClear(GL_DEPTH_BUFFER_BIT);
 
-		shadow.use();
+		/*shadow.use();
 
 		shadow.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 		shadow.setMat4("model", monkeyTransform.modelMatrix());
@@ -181,7 +189,7 @@ int main() {
 
 		shadow.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 		shadow.setMat4("model", planeTransform.modelMatrix());
-		planeMesh.draw();
+		planeMesh.draw();*/
 
 
 		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -198,9 +206,7 @@ int main() {
 
 
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, screenWidth, screenHeight);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
 
 		//render scene
@@ -232,7 +238,11 @@ int main() {
 		shader.setMat4("_Model", monkeyTransform.modelMatrix());
 		shader.setMat4("_ViewProjection", camera.projectionMatrix()* camera.viewMatrix());
 		shader.setVec3("_EyePos", camera.position);
-		shader.setVec3("_LightPos", lightPos);
+		
+		shader.setMat4("_LightViewProj", lightView);
+		
+		shader.setVec4("_LightPos", glm::vec4(lightPos, 1));
+
 		monkeyModel.draw();
 
 
@@ -242,6 +252,8 @@ int main() {
 		shader.setMat4("_ViewProjection", camera.projectionMatrix()* camera.viewMatrix());
 		shader.setVec3("_EyePos", camera.position);
 		shader.setVec3("_LightPos", lightPos);
+		shader.setMat4("_LightViewProj", lightView);
+		shader.setVec4("_LightPos", glm::vec4(lightPos, 1));
 
 		planeMesh.draw();
 

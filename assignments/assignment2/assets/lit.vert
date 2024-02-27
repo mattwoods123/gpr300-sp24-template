@@ -12,10 +12,16 @@ out Surface{
 	vec2 TexCoord;
 }vs_out;
 
+uniform mat4 _LightViewProj;
 
+out vec4 LightSpacePos;
+
+uniform vec3 _LightPos;
 
 void main(){
 //Transform vertex position to World Space.
+	LightSpacePos = _LightViewProj * _Model * vec4(_LightPos,1);
+
 	vs_out.WorldPos = vec3(_Model * vec4(vPos,1.0));
 	//Transform vertex normal to world space using Normal Matrix
 	vs_out.WorldNormal = transpose(inverse(mat3(_Model))) * vNormal;
