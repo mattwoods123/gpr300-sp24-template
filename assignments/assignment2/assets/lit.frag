@@ -8,8 +8,9 @@ in Surface{
 
 uniform sampler2D _MainTex; 
 uniform vec3 _EyePos;
+uniform vec3 _LightPos;
 uniform vec3 _LightDirection = vec3(0.0,-1.0,0.0);
-uniform vec3 _LightColor = vec3(1.0);
+uniform vec3 _LightColor = vec3(1.0); 
 uniform vec3 _AmbientColor = vec3(0.3,0.4,0.46);
 
 struct Material{
@@ -22,6 +23,7 @@ struct Material{
 uniform Material _Material;
 
 void main(){
+	//_LightDirection = vec3(0,0,0) - _LightPos;
 	//Make sure fragment normal is still length 1 after interpolation.
 	vec3 normal = normalize(fs_in.WorldNormal);
 	//Light pointing straight down
