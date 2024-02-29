@@ -41,7 +41,7 @@ struct Material {
 //glm::mat4 lightSpaceMatrix;
 //glm::mat4 model;
 
-
+unsigned int depthMap;
 
 int main() {
 	GLFWwindow* window = initWindow("Assignment 0", screenWidth, screenHeight);
@@ -72,7 +72,7 @@ int main() {
 	planeTransform.position = glm::vec3(0, -2, 0);
 	
 
-	const unsigned int Shadow_W = 1024, Shadow_H = 1024;
+	const unsigned int Shadow_W = 1080, Shadow_H = 720;
 	unsigned int depthMapFBO;
 	glCreateFramebuffers(1, &depthMapFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
@@ -80,7 +80,6 @@ int main() {
 
 	
 
-	unsigned int depthMap;
 	glGenTextures(1, &depthMap);
 	glBindTexture(GL_TEXTURE_2D, depthMap);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, Shadow_W, Shadow_H, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -98,18 +97,6 @@ int main() {
 	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap,0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
-	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	//glViewport(0, 0, Shadow_W, Shadow_H);
-	//glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-	//glClear(GL_DEPTH_BUFFER_BIT);
-
-	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	//glViewport(0, 0, screenWidth, screenHeight);
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	////ConfigureShaderAndMatrices();
-	//glBindTexture(GL_TEXTURE_2D, depthMap);
-	////RenderScene();
 
 	
 
@@ -139,7 +126,7 @@ int main() {
 	
 
 
-		monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
+		//monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
 		
 
 		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
@@ -171,10 +158,7 @@ int main() {
 
 
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0); 
-		glViewport(0, 0, screenHeight, screenHeight);
-		glClearColor(0.0, 0.0, 0.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
 
 		//glViewport(0, 0, Shadow_W, Shadow_H);
@@ -183,7 +167,7 @@ int main() {
 
 		shadow.use();
 
-		shadow.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		shadow.setMat4("_ViewProjection", lightSpaceMatrix);
 		shadow.setMat4("model", monkeyTransform.modelMatrix());
 		monkeyModel.draw();
 
@@ -192,19 +176,19 @@ int main() {
 		planeMesh.draw();
 
 
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, 1080, 720);
+		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT |GL_DEPTH_BUFFER_BIT);
+
+
 		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		//glViewport(0, 0, screenWidth, screenHeight);
 		//glClearColor(0.0, 0.0, 0.0, 1.0);
 		//glClearDepth(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		//quad.use();
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, depthMap);
 		
 
-
-
-
+		shader.use();
 
 
 
@@ -231,32 +215,27 @@ int main() {
 		glBindTexture(GL_TEXTURE_2D, depthMap);
 
 
-		shader.use();
-
-
-
 		shader.setMat4("_Model", monkeyTransform.modelMatrix());
 		shader.setMat4("_ViewProjection", camera.projectionMatrix()* camera.viewMatrix());
 		shader.setVec3("_EyePos", camera.position);
 		
 		shader.setMat4("_LightViewProj", lightSpaceMatrix);
-		
-		shader.setVec4("_LightPos", glm::vec4(lightPos, 1));
-
 		monkeyModel.draw();
+		
 
 		//floor
 		shader.setMat4("_Model", planeTransform.modelMatrix());
-
 		planeMesh.draw();
+		
 
 
 		//Make "_MainTex" sampler2D sample from the 2D texture bound to unit 0
-		shader.use();
 		shader.setInt("_MainTex", 0);
 		shader.setInt("_ShadowMap", 1);
 		//shadow mapping
 		
+		
+
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_BACK); //Back face culling
 		glEnable(GL_DEPTH_TEST); //Depth testing
@@ -285,6 +264,9 @@ void drawUI() {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui::NewFrame();
 
+
+	
+
 	ImGui::Begin("Settings");
 
 	ImGui::Text("Add Controls Here!");
@@ -298,7 +280,17 @@ void drawUI() {
 		ImGui::SliderFloat("SpecularK", &material.Ks, 0.0f, 1.0f);
 		ImGui::SliderFloat("Shininess", &material.Shininess, 2.0f, 1024.0f);
 	}
+	ImGui::End();
+	ImGui::Begin("Shadow Map");
 
+	ImGui::BeginChild("ShadowMap");
+
+	ImVec2 WindowSize = ImGui::GetWindowSize();
+
+	ImGui::Image((ImTextureID)depthMap, WindowSize, ImVec2(0, 1), ImVec2(1, 0));
+
+
+	ImGui::EndChild();
 	ImGui::End();
 
 	ImGui::Render();
