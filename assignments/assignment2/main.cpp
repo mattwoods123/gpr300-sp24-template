@@ -90,6 +90,7 @@ int main() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	float borderColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
 
 
 
@@ -138,27 +139,19 @@ int main() {
 	
 
 
-		//monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
+		monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
 		
 
 		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-		glViewport(0, 0, screenWidth, screenHeight);
-		
-		
-		
+		glViewport(0, 0, Shadow_W, Shadow_H);
 		glClearColor(0.6f, 0.8f, 0.92f, 1.0f);
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear( GL_DEPTH_BUFFER_BIT);
 
 
 
 
 		
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0); 
-		//glViewport(0, 0, screenHeight, screenHeight);
-		//glClearColor(0.0, 0.0, 0.0, 1.0);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		
 		
 
 		
@@ -177,19 +170,26 @@ int main() {
 		glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
 
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+		glViewport(0, 0, screenHeight, screenHeight);
+		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
 		//glViewport(0, 0, Shadow_W, Shadow_H);
 		//glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 		//glClear(GL_DEPTH_BUFFER_BIT);
 
-		/*shadow.use();
+		shadow.use();
 
 		shadow.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 		shadow.setMat4("model", monkeyTransform.modelMatrix());
 		monkeyModel.draw();
 
-		shadow.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
 		shadow.setMat4("model", planeTransform.modelMatrix());
-		planeMesh.draw();*/
+		planeMesh.draw();
 
 
 		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -239,21 +239,14 @@ int main() {
 		shader.setMat4("_ViewProjection", camera.projectionMatrix()* camera.viewMatrix());
 		shader.setVec3("_EyePos", camera.position);
 		
-		shader.setMat4("_LightViewProj", lightView);
+		shader.setMat4("_LightViewProj", lightSpaceMatrix);
 		
 		shader.setVec4("_LightPos", glm::vec4(lightPos, 1));
 
 		monkeyModel.draw();
 
-
-		shader.use();
 		//floor
 		shader.setMat4("_Model", planeTransform.modelMatrix());
-		shader.setMat4("_ViewProjection", camera.projectionMatrix()* camera.viewMatrix());
-		shader.setVec3("_EyePos", camera.position);
-		shader.setVec3("_LightPos", lightPos);
-		shader.setMat4("_LightViewProj", lightView);
-		shader.setVec4("_LightPos", glm::vec4(lightPos, 1));
 
 		planeMesh.draw();
 
@@ -261,6 +254,7 @@ int main() {
 		//Make "_MainTex" sampler2D sample from the 2D texture bound to unit 0
 		shader.use();
 		shader.setInt("_MainTex", 0);
+		shader.setInt("_ShadowMap", 1);
 		//shadow mapping
 		
 		glEnable(GL_CULL_FACE);

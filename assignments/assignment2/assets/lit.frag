@@ -29,7 +29,7 @@ uniform sampler2D _ShadowMap;
 
 
 float shadCalc(sampler2D shadowMap, vec4 Lpos){
-	vec3 pos = Lpos.xyz * Lpos.w;
+	vec3 pos = Lpos.xyz / Lpos.w;
 	pos = pos * 0.5 + 0.5;
 	float myDepth = pos.z;
 	float shadowMapDepth = texture(shadowMap, pos.xy).r;
@@ -38,11 +38,8 @@ float shadCalc(sampler2D shadowMap, vec4 Lpos){
 
 
 void main(){
-
-
-
 	
-	//_LightDirection = vec3(0,0,0) - _LightPos;
+	
 	//Make sure fragment normal is still length 1 after interpolation.
 	vec3 normal = normalize(fs_in.WorldNormal);
 	//Light pointing straight down
