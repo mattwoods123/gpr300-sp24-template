@@ -1,6 +1,6 @@
 #version 450
 
 
-int main{
+void main{
 
 }

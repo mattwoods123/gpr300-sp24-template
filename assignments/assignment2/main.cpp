@@ -72,17 +72,16 @@ int main() {
 	planeTransform.position = glm::vec3(0, -2, 0);
 	
 
-	const unsigned int Shadow_W = 1080, Shadow_H = 720;
+	const unsigned int Shadow_W = 2048, Shadow_H = 2048;
 	unsigned int depthMapFBO;
 	glCreateFramebuffers(1, &depthMapFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-	glGenFramebuffers(1, &depthMapFBO);
+	glGenTextures(1, &depthMapFBO);
 
 	
 
-	glGenTextures(1, &depthMap);
 	glBindTexture(GL_TEXTURE_2D, depthMap);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, Shadow_W, Shadow_H, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT16, Shadow_W, Shadow_H);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -102,12 +101,10 @@ int main() {
 
 	
 
-	ew::Shader quad = ew::Shader("assets/quad.vert", "assets/quad.frag");
 
-	
-
-
-
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK); //Back face culling
+	glEnable(GL_DEPTH_TEST); //Depth testing
 	//glm::vec3 plane[6] = {glm::vec3(5,0,5), glm::vec3(-5,0,5), glm::vec3(5,0,-5), glm::vec3(-5,0,-5), glm::vec3(-5,0,5), glm::vec3(5,0,-5) };
 
 	while (!glfwWindowShouldClose(window)) {
@@ -126,10 +123,10 @@ int main() {
 	
 
 
-		//monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
+		monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
 		
 
-		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, Shadow_W, Shadow_H);
 		glClearColor(0.6f, 0.8f, 0.92f, 1.0f);
 		glClear( GL_DEPTH_BUFFER_BIT);
@@ -146,9 +143,9 @@ int main() {
 
 		float nearPlane = 1.0f, far_plane = 7.5f;
 		glm::mat4 lightProjection = glm::ortho(-10.f, 10.0f, -10.0f, 10.0f, nearPlane, far_plane);
-
+		//glm::mat4 lightProjection = glm::ortho(-1.f, 1.0f, -1.0f, 1.0f, nearPlane, far_plane);
 		
-		glm::vec3 lightPos = glm::vec3(-2.0f, 5.0f, -1.0f);
+		glm::vec3 lightPos = glm::vec3(0, -1.0f, 0);
 
 		glm::mat4 lightView = glm::lookAt(lightPos,
 			glm::vec3(0.0f, 0.0f, 0.0f),
@@ -218,7 +215,6 @@ int main() {
 		shader.setMat4("_Model", monkeyTransform.modelMatrix());
 		shader.setMat4("_ViewProjection", camera.projectionMatrix()* camera.viewMatrix());
 		shader.setVec3("_EyePos", camera.position);
-		
 		shader.setMat4("_LightViewProj", lightSpaceMatrix);
 		monkeyModel.draw();
 		
@@ -228,7 +224,7 @@ int main() {
 		planeMesh.draw();
 		
 
-
+		shadow.use();
 		//Make "_MainTex" sampler2D sample from the 2D texture bound to unit 0
 		shader.setInt("_MainTex", 0);
 		shader.setInt("_ShadowMap", 1);
@@ -236,9 +232,8 @@ int main() {
 		
 		
 
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK); //Back face culling
-		glEnable(GL_DEPTH_TEST); //Depth testing
+
+
 
 		drawUI();
 
@@ -265,6 +260,18 @@ void drawUI() {
 	ImGui::NewFrame();
 
 
+	ImGui::Begin("Shadow Map");
+
+	ImGui::BeginChild("ShadowMap");
+
+	ImVec2 WindowSize = ImGui::GetWindowSize();
+
+	ImGui::Image((ImTextureID)depthMap, WindowSize, ImVec2(0, 1), ImVec2(1, 0));
+
+
+	ImGui::EndChild();
+	ImGui::End();
+
 	
 
 	ImGui::Begin("Settings");
@@ -281,17 +288,7 @@ void drawUI() {
 		ImGui::SliderFloat("Shininess", &material.Shininess, 2.0f, 1024.0f);
 	}
 	ImGui::End();
-	ImGui::Begin("Shadow Map");
 
-	ImGui::BeginChild("ShadowMap");
-
-	ImVec2 WindowSize = ImGui::GetWindowSize();
-
-	ImGui::Image((ImTextureID)depthMap, WindowSize, ImVec2(0, 1), ImVec2(1, 0));
-
-
-	ImGui::EndChild();
-	ImGui::End();
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
