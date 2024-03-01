@@ -16,8 +16,6 @@ uniform mat4 _LightViewProj;
 
 out vec4 LightSpacePos;
 
-uniform vec3 _LightPos;
-
 void main(){
 //Transform vertex position to World Space.
 	LightSpacePos = _LightViewProj * _Model * vec4(vPos,1);

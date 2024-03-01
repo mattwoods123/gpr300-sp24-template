@@ -53,7 +53,6 @@ void main(){
 	// Shadow Calc
 	float shadow = shadCalc(_ShadowMap, LightSpacePos);
 	
-
 	//Combination of specular and diffuse reflection
 	vec3 lightColor = (_Material.Kd * diffuseFactor + _Material.Ks * specularFactor) * _LightColor * (1.0 - shadow);
 	lightColor += _AmbientColor * _Material.Ka;

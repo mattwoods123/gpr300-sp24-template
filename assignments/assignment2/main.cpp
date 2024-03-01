@@ -42,7 +42,7 @@ struct Material {
 //glm::mat4 model;
 
 unsigned int depthMap;
-
+	unsigned int depthMapFBO;
 int main() {
 	GLFWwindow* window = initWindow("Assignment 0", screenWidth, screenHeight);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
@@ -73,10 +73,10 @@ int main() {
 	
 
 	const unsigned int Shadow_W = 2048, Shadow_H = 2048;
-	unsigned int depthMapFBO;
+
 	glCreateFramebuffers(1, &depthMapFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-	glGenTextures(1, &depthMapFBO);
+	glGenTextures(1, &depthMap);
 
 	
 
@@ -116,7 +116,7 @@ int main() {
 
 
 
-
+		
 
 		//RENDER
 
@@ -126,26 +126,17 @@ int main() {
 		monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
 		
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 		glViewport(0, 0, Shadow_W, Shadow_H);
 		glClearColor(0.6f, 0.8f, 0.92f, 1.0f);
 		glClear( GL_DEPTH_BUFFER_BIT);
 
 
-
-
-		
-		
-		
-
-		
-		
-
 		float nearPlane = 1.0f, far_plane = 7.5f;
 		glm::mat4 lightProjection = glm::ortho(-10.f, 10.0f, -10.0f, 10.0f, nearPlane, far_plane);
 		//glm::mat4 lightProjection = glm::ortho(-1.f, 1.0f, -1.0f, 1.0f, nearPlane, far_plane);
 		
-		glm::vec3 lightPos = glm::vec3(0, -1.0f, 0);
+		glm::vec3 lightPos = glm::vec3(0, 5.0f, 1.0f);
 
 		glm::mat4 lightView = glm::lookAt(lightPos,
 			glm::vec3(0.0f, 0.0f, 0.0f),
@@ -158,18 +149,16 @@ int main() {
 
 
 
-		//glViewport(0, 0, Shadow_W, Shadow_H);
-		//glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-		//glClear(GL_DEPTH_BUFFER_BIT);
+		//rendering Shadow 
 
 		shadow.use();
 
 		shadow.setMat4("_ViewProjection", lightSpaceMatrix);
-		shadow.setMat4("model", monkeyTransform.modelMatrix());
+		shadow.setMat4("_Model", monkeyTransform.modelMatrix());
 		monkeyModel.draw();
 
 
-		shadow.setMat4("model", planeTransform.modelMatrix());
+		shadow.setMat4("_Model", planeTransform.modelMatrix());
 		planeMesh.draw();
 
 
@@ -184,6 +173,11 @@ int main() {
 		//glClearColor(0.0, 0.0, 0.0, 1.0);
 		//glClearDepth(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
+
+		GLenum fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
+			printf("Framebuffer incomplete: %d", depthMap);
+		}
 
 		shader.use();
 
@@ -223,14 +217,13 @@ int main() {
 		shader.setMat4("_Model", planeTransform.modelMatrix());
 		planeMesh.draw();
 		
-
-		shadow.use();
+		
 		//Make "_MainTex" sampler2D sample from the 2D texture bound to unit 0
 		shader.setInt("_MainTex", 0);
 		shader.setInt("_ShadowMap", 1);
 		//shadow mapping
 		
-		
+
 
 
 
