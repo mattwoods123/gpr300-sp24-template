@@ -43,6 +43,7 @@ struct Material {
 
 unsigned int depthMap;
 	unsigned int depthMapFBO;
+	glm::vec3 lightPos = glm::vec3(0, 5.0f, 1.0f);
 int main() {
 	GLFWwindow* window = initWindow("Assignment 0", screenWidth, screenHeight);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
@@ -136,7 +137,7 @@ int main() {
 		glm::mat4 lightProjection = glm::ortho(-10.f, 10.0f, -10.0f, 10.0f, nearPlane, far_plane);
 		//glm::mat4 lightProjection = glm::ortho(-1.f, 1.0f, -1.0f, 1.0f, nearPlane, far_plane);
 		
-		glm::vec3 lightPos = glm::vec3(0, 5.0f, 1.0f);
+		
 
 		glm::mat4 lightView = glm::lookAt(lightPos,
 			glm::vec3(0.0f, 0.0f, 0.0f),
@@ -222,10 +223,6 @@ int main() {
 		shader.setInt("_MainTex", 0);
 		shader.setInt("_ShadowMap", 1);
 		//shadow mapping
-		
-
-
-
 
 
 		drawUI();
@@ -279,6 +276,11 @@ void drawUI() {
 		ImGui::SliderFloat("DiffuseD", &material.Kd, 0.0f, 1.0f);
 		ImGui::SliderFloat("SpecularK", &material.Ks, 0.0f, 1.0f);
 		ImGui::SliderFloat("Shininess", &material.Shininess, 2.0f, 1024.0f);
+	}
+	if (ImGui::CollapsingHeader("Lighting")) {
+		ImGui::SliderFloat("Light X", &lightPos.x,-5.0f, 5.0f);
+		ImGui::SliderFloat("Light Y", &lightPos.y,-5.0f, 5.0f);
+		ImGui::SliderFloat("Light Z", &lightPos.z,-5.0f, 5.0f);
 	}
 	ImGui::End();
 
