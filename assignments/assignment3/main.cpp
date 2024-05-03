@@ -194,8 +194,8 @@ int main() {
 
 
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, depthMap);
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, depthMap);
 
 		//Rotate model around Y axis
 
@@ -215,8 +215,8 @@ int main() {
 		
 
 		//floor
-	/*	shader.setMat4("_Model", planeTransform.modelMatrix());
-		planeMesh.draw();*/
+		shader.setMat4("_Model", planeTransform.modelMatrix());
+		planeMesh.draw();
 		
 		
 		//Make "_MainTex" sampler2D sample from the 2D texture bound to unit 0

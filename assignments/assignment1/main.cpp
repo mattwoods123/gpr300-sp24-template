@@ -30,7 +30,19 @@ float deltaTime;
 ew::Camera camera;
 ew::CameraController cameraController;
 
+<<<<<<< HEAD
 
+=======
+//float recVerts[] = {
+//	1.0f, -1.0f, 1.0f, 0.0f,
+//	-1.0f, -1.0, 0.0f, 0.0f,
+//	-1.0f, 1.0f, 0.0f, 1.0f,
+//
+//	1.0f, 1.0f, 1.0f, 1.0f,
+//	1.0f, -1.0f, 1.0f, 0.0f,
+//	-1.0f, 1.0f, 0.0f,  1.0f
+//};
+>>>>>>> b0cab2e5a84ac87f6f95d6907957cfb2df25044b
 
 struct Material {
 	float Ka = 1.0; 
@@ -79,6 +91,7 @@ int main() {
 
 
 
+<<<<<<< HEAD
 	unsigned int VAO;
 	glCreateVertexArrays(1, &VAO);
 	
@@ -115,10 +128,76 @@ int main() {
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
 
 	auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+=======
+
+
+
+
+
+	//unsigned int FBO;
+	//glGenFramebuffers(1, &FBO);
+	//glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+	//unsigned int frameBufferTexture;
+	//glGenTextures(0, &frameBufferTexture);
+	//glBindTexture(GL_TEXTURE_2D, frameBufferTexture);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameBufferTexture, 0);
+
+	//unsigned int RBO;
+	//glGenRenderbuffers(1, &RBO);
+	//glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+	//glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
+	//glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+
+	//auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	//slide 6
+	unsigned int fbo, colorBuffer;
+
+	glCreateFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	glGenTextures(1, &colorBuffer);
+	glBindTexture(GL_TEXTURE_2D, colorBuffer);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, screenWidth, screenHeight);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorBuffer, 0);
+
+	//slides 9
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK); //Back face culling
+	glEnable(GL_DEPTH_TEST); //Depth testing
+>>>>>>> b0cab2e5a84ac87f6f95d6907957cfb2df25044b
 	
+	unsigned int depthBuffer;
+
+	glGenTextures(1, &depthBuffer);
+
+	glBindTexture(GL_TEXTURE_2D, depthBuffer);
+
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT16, screenWidth, screenHeight);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthBuffer, 0);
+
+
+
+	//if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
+	//	std::cout << "Error : " << fboStatus << std::endl;
+	//}
+
+	GLenum fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
-		std::cout << "Error : " << fboStatus << std::endl;
+		printf("Framebuffer incomplete: %d", fboStatus);
 	}
+
+	unsigned int rbo;
+
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
 
 
@@ -137,10 +216,27 @@ int main() {
 		deltaTime = time - prevFrameTime;
 		prevFrameTime = time;
 
+<<<<<<< HEAD
+=======
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+>>>>>>> b0cab2e5a84ac87f6f95d6907957cfb2df25044b
 
 		//glCullFace(GL_BACK);
 
+<<<<<<< HEAD
 		//glBindTextureUnit(0, brickTexture);
+=======
+		//RENDER
+		glClearColor(0.6f,0.8f,0.92f,1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glViewport(0, 0, screenWidth, screenHeight);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+
+
+>>>>>>> b0cab2e5a84ac87f6f95d6907957cfb2df25044b
 
 		
 		monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
@@ -182,6 +278,7 @@ int main() {
 		monkeyModel.draw();
 		shader.setInt("_MainTex", 0);
 
+<<<<<<< HEAD
 		//glBindTexture(GL_TEXTURE_2D, CBuffer);
 
 		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, CBuffer, 0);
@@ -192,6 +289,17 @@ int main() {
 
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+=======
+
+
+
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//framebuffer.use();
+		//glBindVertexArray(rectVA);
+		//glDisable(GL_DEPTH_TEST);
+		//glBindTexture(GL_TEXTURE_2D, frameBufferTexture);
+		//glDrawArrays(GL_TRIANGLES, 0, 6);
+>>>>>>> b0cab2e5a84ac87f6f95d6907957cfb2df25044b
 
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
